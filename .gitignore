@@ -1,5 +1,6 @@
 ### C++ template
 # Prerequisites
+libs/
 *.d
 
 # Compiled Object files
