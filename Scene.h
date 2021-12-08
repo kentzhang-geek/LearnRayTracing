@@ -23,6 +23,8 @@ class Scene {
 public:
     Scene() = default;
 
+    Eigen::Vector4d computeLo(Ray &r);
+
     bool rayHit(const Ray &ray, HitObject * &hitObject, Eigen::Vector3d &pos);
 
     Ray rayAtPixel(double x, double y);
@@ -37,6 +39,7 @@ public:
     Eigen::Vector3d cam_pos = Eigen::Vector3d(0.0, 0.0, 0.0);
     Eigen::Vector3d cam_dir = Eigen::Vector3d(1.0, 0.0, 0.0);
 
+    std::list<std::shared_ptr<HitObject>> lights;
     std::list<std::shared_ptr<HitObject>> objects;
     double pixels_width;
     double pixels_height;

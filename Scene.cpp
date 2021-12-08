@@ -3,13 +3,30 @@
 //
 
 #include "Scene.h"
+#include <glm/glm.hpp>
 
 bool Scene::rayHit(const Ray &ray, HitObject * &hitObject, Eigen::Vector3d &pos) {
-    for (auto oit: objects) {
-        if (oit->rayHit(ray, &pos)) {
-            hitObject = oit.get();
-            return true;
+    typedef std::pair<Eigen::Vector3d, std::shared_ptr<HitObject>> HitPair;
+    std::vector<HitPair> hit_list;
+    for (auto oit: lights) {
+        Eigen::Vector3d pt;
+        if (oit->rayHit(ray, &pt)) {
+            hit_list.push_back({pt, oit});
         }
+    }
+    for (auto oit: objects) {
+        Eigen::Vector3d pt;
+        if (oit->rayHit(ray, &pt)) {
+            hit_list.push_back({pt, oit});
+        }
+    }
+    if (!hit_list.empty()) {
+        std::sort(hit_list.begin(), hit_list.end(), [&ray](HitPair v1, HitPair v2){
+            return (v1.first - ray.origin).norm() < (v2.first - ray.origin).norm();
+        });
+        pos = hit_list.front().first;
+        hitObject = hit_list.front().second.get();
+        return true;
     }
     return false;
 }
@@ -42,10 +59,20 @@ Eigen::Vector2d Scene::pixelToNormalized(double x, double y) {
 }
 
 double Scene::xMaxAtDistance(double dis) {
-    return std::tan(fovy / 2.0) * dis;
+    return std::tan(glm::radians(fovy / 2.0)) * dis;
 }
 
 double Scene::yMaxAtDistance(double dis) {
     double ratio = pixels_height / pixels_width;
     return xMaxAtDistance(dis) * ratio;
+}
+
+Eigen::Vector4d Scene::computeLo(Ray &r) {
+    HitObject *hp;
+    Eigen::Vector3d pt;
+    if (rayHit(r, hp, pt)) {
+        Eigen::Vector3d n = hp->normalAtPoint(pt);
+        return hp->emessive_intensity;
+    }
+    return Eigen::Vector4d::Zero();
 }
