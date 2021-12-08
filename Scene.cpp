@@ -4,8 +4,10 @@
 
 #include "Scene.h"
 #include <glm/glm.hpp>
+#include "Quad.h"
+#include "MathTools.h"
 
-bool Scene::rayHit(const Ray &ray, HitObject * &hitObject, Eigen::Vector3d &pos) {
+bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) {
     typedef std::pair<Eigen::Vector3d, std::shared_ptr<HitObject>> HitPair;
     std::vector<HitPair> hit_list;
     for (auto oit: lights) {
@@ -21,7 +23,7 @@ bool Scene::rayHit(const Ray &ray, HitObject * &hitObject, Eigen::Vector3d &pos)
         }
     }
     if (!hit_list.empty()) {
-        std::sort(hit_list.begin(), hit_list.end(), [&ray](HitPair v1, HitPair v2){
+        std::sort(hit_list.begin(), hit_list.end(), [&ray](HitPair v1, HitPair v2) {
             return (v1.first - ray.origin).norm() < (v2.first - ray.origin).norm();
         });
         pos = hit_list.front().first;
@@ -29,6 +31,38 @@ bool Scene::rayHit(const Ray &ray, HitObject * &hitObject, Eigen::Vector3d &pos)
         return true;
     }
     return false;
+}
+
+Eigen::Vector4d Scene::directLightDiffuse(HitObject *hp, Eigen::Vector3d pos) {
+    Eigen::Vector4d color = Eigen::Vector4d::Zero();
+    for (int i = 0; i < lights.size(); i++) {
+        auto l = lights[i];
+        // only about quad light now
+        Quad *q = dynamic_cast<Quad *>(l.get());
+        Eigen::Vector3d dApt = q->randomPick_dA();
+        // visible detect
+        bool visible = false;
+        Ray r;
+        r.origin = pos;
+        r.dir = (dApt - pos).normalized();
+        HitObject *hp2;
+        Eigen::Vector3d vistestpt;
+        if (rayHit(r, hp2, vistestpt)) {
+            if (hp2 == l.get()) {
+                // visible
+                visible = true;
+            }
+        }
+        // compute light
+        double light_travel = (dApt - pos).norm();
+        double dis_fall = 1.0 / std::max(1.0, light_travel * light_travel);
+        color =
+                color_mult(hp->albedo, l->emessive_intensity) * dis_fall *
+                std::max(0.0, r.dir.dot(hp->normalAtPoint(pos))) //brdf;
+                * (r.dir.dot(-l->normalAtPoint(dApt)) > 0.01 ? 1.0 : 0.0) // back light
+                ;
+    }
+    return color;
 }
 
 Ray Scene::rayAtPixel(double x, double y) {
@@ -40,11 +74,11 @@ Ray Scene::rayAtPixel(double x, double y) {
     Eigen::Vector3d right = cam_dir.cross(up);
     up = right.cross(cam_dir);
 
-    Eigen::Vector2d  xy_normed = pixelToNormalized(x,y);
+    Eigen::Vector2d xy_normed = pixelToNormalized(x, y);
 
     Eigen::Vector3d hit_at_one = center
-            + right * xy_normed.x() * xMaxAtDistance(1.0)
-            + up * xy_normed.y() * yMaxAtDistance(1.0);
+                                 + right * xy_normed.x() * xMaxAtDistance(1.0)
+                                 + up * xy_normed.y() * yMaxAtDistance(1.0);
 
     r.origin = cam_pos;
     r.dir = (hit_at_one - cam_pos).normalized();
@@ -72,7 +106,7 @@ Eigen::Vector4d Scene::computeLo(Ray &r) {
     Eigen::Vector3d pt;
     if (rayHit(r, hp, pt)) {
         Eigen::Vector3d n = hp->normalAtPoint(pt);
-        return hp->emessive_intensity;
+        return hp->emessive_intensity + directLightDiffuse(hp, pt);
     }
     return Eigen::Vector4d::Zero();
 }

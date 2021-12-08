@@ -60,10 +60,10 @@ int main() {
 
     // light
     double light_size = 0.5;
-    quad = Quad::quick_by_center({5.0, quad_size - 0.1, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
+    quad = Quad::quick_by_center({5.0, quad_size - 0.3, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
     quad->emessive_intensity = {10.0, 10.0, 10.0, 1.0};
     quad->isLight = true;
-    scene.objects.push_back(quad);
+    scene.lights.push_back(quad);
 
     // multisample offset
     Eigen::Vector2d offsets[4] = {
@@ -75,15 +75,17 @@ int main() {
 
     ThreadPool tp(12);
     std::list<std::future<void>> results;
+    int count = 0;
 
     for (int x = 0; x < xmax; x++) {
         for (int y = 0; y < ymax; y++) {
-            std::future<void> f = tp.enqueue([x, y, &scene, &simple_light, &willsave, offsets]() {
+            std::future<void> f = tp.enqueue([x, y, &count, &scene, &simple_light, &willsave, offsets]() {
                 Eigen::Vector4d color = Eigen::Vector4d::Zero();
                 for (auto offset: offsets) {
                     Ray r = scene.rayAtPixel(x + offset.x(), y + offset.y());
                     color += scene.computeLo(r);
                 }
+                std::cout << "Done Ray " << std::to_string(count++) << std::endl;
                 color = color / 4.0;
                 willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), color.w()));
                 return;
