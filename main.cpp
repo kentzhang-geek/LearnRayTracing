@@ -83,12 +83,13 @@ int main() {
         for (int y = 0; y < ymax; y++) {
             std::future<void> f = tp.enqueue([x, y, &count, &scene, &simple_light, &willsave, offsets]() {
                 Eigen::Vector4d color = Eigen::Vector4d::Zero();
+//                for (int samples = 0; samples < 16; samples++)
                 for (auto offset: offsets) {
                     Ray r = scene.rayAtPixel(x + offset.x(), y + offset.y());
                     color += scene.computeLo(r);
                 }
-                std::cout << "Done Ray " << std::to_string(count++) << std::endl;
-                color = color / 4.0;
+//                std::cout << "Done Ray " << std::to_string(count++) << std::endl;
+                color = color / 4.0; // / 16.0;
                 willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), color.w()));
                 return;
             });
