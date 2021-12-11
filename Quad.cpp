@@ -3,12 +3,8 @@
 //
 
 #include "Quad.h"
-#include <boost/random.hpp>
+#include "MathTools.h"
 
-boost::mt19937 gen;
-boost::uniform_01<boost::mt19937> dist_boost(gen);
-
-#define RANDOM_NUM_LEN 1000
 
 bool Quad::rayHit(const Ray &r, Eigen::Vector3d *pt_hit) {
     if (two_triangle[0].rayHit(r, pt_hit))
@@ -19,7 +15,7 @@ bool Quad::rayHit(const Ray &r, Eigen::Vector3d *pt_hit) {
 }
 
 Eigen::Vector3d Quad::randomPick_dA() {
-    return center + x * (random_nums[rand_idx++ % RANDOM_NUM_LEN]) + y * (random_nums[rand_idx++ % RANDOM_NUM_LEN]);
+    return center + x * (MathTools::rand_01() * 2.0 - 1.0) + y * (MathTools::rand_01() * 2.0 - 1.0);
 }
 
 Eigen::Vector3d Quad::normalAtPoint(Eigen::Vector3d pt) const {
@@ -43,8 +39,4 @@ std::shared_ptr<Quad> Quad::quick_by_center(Eigen::Vector3d center, Eigen::Vecto
 }
 
 Quad::Quad() {
-    // prepare random numbers
-    for (int i = 0; i < RANDOM_NUM_LEN; i++) {
-        this->random_nums.push_back(dist_boost() * 2.0 - 1.0);
-    }
 }

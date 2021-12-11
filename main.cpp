@@ -19,6 +19,8 @@
 //}
 
 int main() {
+    // init random
+    MathTools::prepare_rand(1000);
     const int xmax = 800;
     const int ymax = 400;
     gli::texture2d::extent_type dms;

@@ -33,38 +33,50 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
     return false;
 }
 
-Eigen::Vector4d Scene::directLightDiffuse(HitObject *hp, Eigen::Vector3d pos) {
-    Eigen::Vector4d color = Eigen::Vector4d::Zero();
-    for (int i = 0; i < lights.size(); i++) {
-        auto l = lights[i];
-        // only about quad light now
-        Quad *q = dynamic_cast<Quad *>(l.get());
-        Eigen::Vector3d dApt = q->randomPick_dA();
-        // visible detect
-        bool visible = false;
+static inline Eigen::Vector3d random_unit_sphere() {
+    Eigen::Vector3d ret;
+    do {
+        ret = {MathTools::rand_01() * 2.0 - 1.0, MathTools::rand_01() * 2.0 - 1.0, MathTools::rand_01() * 2.0 - 1.0};
+    } while (ret.norm() > 1.0);
+    return ret;
+}
+
+static Eigen::Vector4d iterRay(Ray &r, Scene *sc) {
+    HitObject *hp;
+    Eigen::Vector3d pt;
+    if (sc->rayHit(r, hp, pt)) {
         Ray r;
-        r.origin = pos;
-        r.dir = (dApt - pos).normalized();
-        HitObject *hp2;
-        Eigen::Vector3d vistestpt;
-        if (rayHit(r, hp2, vistestpt)) {
-            if (hp2 == l.get()) {
-                // visible
-                visible = true;
-            }
-        }
-        // compute light
-        if (visible) {
-            double light_travel = (dApt - pos).norm();
-            double dis_fall = 1.0 / std::max(1.0, light_travel * light_travel);
-            color =
-                    color_mult(hp->albedo, l->emessive_intensity) * dis_fall *
-                    std::max(0.0, r.dir.dot(hp->normalAtPoint(pos))) //brdf;
-                    * (r.dir.dot(-l->normalAtPoint(dApt)) > 0.01 ? 1.0 : 0.0) // back light
-                    ;
-        }
+        r.origin = pt;
+        r.dir = (hp->normalAtPoint(pt) + random_unit_sphere()).normalized();
+        Eigen::Vector4d ret = iterRay(r, sc);
+        ret *= 0.5;
+        ret.w() = 1.0;
+        return ret;
+    } else {
+        double t = r.dir.y() * 0.5 + 0.5;
+        double t1 = 1.0 - t;
+        return {
+                1.0,
+                1.0,
+                1.0,
+                1.0
+        };
+        return {
+                t1 + 0.5 * t,
+                t1 + 0.7 * t,
+                t1 + 1.0 * t,
+                1.0
+        };
     }
-    return color;
+}
+
+Eigen::Vector4d Scene::directLightDiffuse(HitObject *hp, Eigen::Vector3d pos) {
+    // random sphere unit
+    Ray thengo;
+    thengo.origin = pos;
+    thengo.dir = random_unit_sphere() + hp->normalAtPoint(pos);
+
+    return iterRay(thengo, this);
 }
 
 Ray Scene::rayAtPixel(double x, double y) {
