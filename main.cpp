@@ -32,15 +32,15 @@ int main() {
     Scene scene;
     scene.pixels_width = xmax;
     scene.pixels_height = ymax;
-    scene.cam_pos = {0.0, 0.0, 0.0};
+    scene.cam_pos = {-4.0, 0.0, 0.0};
     scene.cam_dir = {1.0, 0.0, 0.0};
 
     Sphere *test = new Sphere;
-    test->center = {5.0, 0.0, 0.0};
+    test->center = {5.0, -2.0, 0.0};
     test->radius = 1.0;
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
     test = new Sphere;
-    test->center = {5.0, 0.0, 2.0};
+    test->center = {5.0, -2.0, 2.0};
     test->radius = 1.0;
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
 

@@ -54,13 +54,15 @@ Eigen::Vector4d Scene::directLightDiffuse(HitObject *hp, Eigen::Vector3d pos) {
             }
         }
         // compute light
-        double light_travel = (dApt - pos).norm();
-        double dis_fall = 1.0 / std::max(1.0, light_travel * light_travel);
-        color =
-                color_mult(hp->albedo, l->emessive_intensity) * dis_fall *
-                std::max(0.0, r.dir.dot(hp->normalAtPoint(pos))) //brdf;
-                * (r.dir.dot(-l->normalAtPoint(dApt)) > 0.01 ? 1.0 : 0.0) // back light
-                ;
+        if (visible) {
+            double light_travel = (dApt - pos).norm();
+            double dis_fall = 1.0 / std::max(1.0, light_travel * light_travel);
+            color =
+                    color_mult(hp->albedo, l->emessive_intensity) * dis_fall *
+                    std::max(0.0, r.dir.dot(hp->normalAtPoint(pos))) //brdf;
+                    * (r.dir.dot(-l->normalAtPoint(dApt)) > 0.01 ? 1.0 : 0.0) // back light
+                    ;
+        }
     }
     return color;
 }
