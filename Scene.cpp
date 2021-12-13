@@ -33,22 +33,20 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
     return false;
 }
 
-static inline Eigen::Vector3d random_unit_sphere() {
-    Eigen::Vector3d ret;
-    do {
-        ret = {MathTools::rand_01() * 2.0 - 1.0, MathTools::rand_01() * 2.0 - 1.0, MathTools::rand_01() * 2.0 - 1.0};
-    } while (ret.norm() > 1.0);
-    return ret;
-}
 
-static Eigen::Vector4d iterRay(Ray &r, Scene *sc) {
+static Eigen::Vector4d iterRay(Ray &r, Scene *sc, uint32_t max_deep = 10) {
+    if (!max_deep)
+        return {0.0, 0.0, 0.0, 0.0};
     HitObject *hp;
     Eigen::Vector3d pt;
     if (sc->rayHit(r, hp, pt)) {
-        Ray r;
-        r.origin = pt;
-        r.dir = (hp->normalAtPoint(pt) + random_unit_sphere()).normalized();
-        Eigen::Vector4d ret = iterRay(r, sc);
+        Ray scattered;
+        Eigen::Vector4d att;
+        Eigen::Vector4d ret = Eigen::Vector4d::Zero();
+        if (hp->material->scatter(r, pt, hp, att, scattered))
+        {
+            ret = color_mult(iterRay(scattered, sc, max_deep - 1), att);
+        }
         ret *= 0.5;
         ret.w() = 1.0;
         return ret;
@@ -70,13 +68,13 @@ static Eigen::Vector4d iterRay(Ray &r, Scene *sc) {
     }
 }
 
-Eigen::Vector4d Scene::directLightDiffuse(HitObject *hp, Eigen::Vector3d pos) {
-    // random sphere unit
-    Ray thengo;
-    thengo.origin = pos;
-    thengo.dir = random_unit_sphere() + hp->normalAtPoint(pos);
+Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_in, Eigen::Vector3d pos) {
+    // ?->Eye
+    Ray out;
+    Eigen::Vector4d attenion;
+    hp->material->scatter(ray_in, pos, hp, attenion, out);
 
-    return iterRay(thengo, this);
+    return color_mult(iterRay(out, this), attenion);
 }
 
 Ray Scene::rayAtPixel(double x, double y) {
@@ -120,7 +118,7 @@ Eigen::Vector4d Scene::computeLo(Ray &r) {
     Eigen::Vector3d pt;
     if (rayHit(r, hp, pt)) {
         Eigen::Vector3d n = hp->normalAtPoint(pt);
-        return hp->emessive_intensity + directLightDiffuse(hp, pt);
+        return hp->emessive_intensity + computeLight(hp, r, pt);
     }
     return Eigen::Vector4d::Zero();
 }

@@ -15,6 +15,8 @@ inline Eigen::Vector4d color_mult(Eigen::Vector4d c1, Eigen::Vector4d c2) {
 namespace MathTools {
     double rand_01();
     void prepare_rand(int random_size);
+    Eigen::Vector3d reflect(Eigen::Vector3d in, Eigen::Vector3d normal);
+    Eigen::Vector3d random_unit_sphere();
 }
 
 #endif //MYRAYTRACER_MATHTOOLS_H

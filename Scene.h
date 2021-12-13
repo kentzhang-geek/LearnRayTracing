@@ -27,7 +27,7 @@ public:
 
     bool rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos);
 
-    Eigen::Vector4d directLightDiffuse(HitObject *hp, Eigen::Vector3d pos);
+    Eigen::Vector4d computeLight(HitObject *hp, const Ray &ray_in, Eigen::Vector3d pos);
 
     Ray rayAtPixel(double x, double y);
 
