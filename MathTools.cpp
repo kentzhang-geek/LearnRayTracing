@@ -37,6 +37,27 @@ Eigen::Vector3d MathTools::reflect(Eigen::Vector3d in, Eigen::Vector3d normal) {
     return in - 2 * in.dot(normal) * normal;
 }
 
+bool MathTools::refract(Eigen::Vector3d vi, Eigen::Vector3d n, double ni_over_nt, Eigen::Vector3d &outray) {
+    vi = vi.normalized();
+    n = n.normalized();
+    double check_sin_out = (1.0 - n.dot(-vi) * n.dot(-vi)) * ni_over_nt * ni_over_nt;
+    if (check_sin_out >= 1.0)
+    {
+        return false;
+    }
+    Eigen::Vector3d sinVinVec = vi + n.dot(-vi) * n;
+    double sinVin = sinVinVec.norm();
+    double sinVout = ni_over_nt * sinVin;
+    double cosVout = sqrt(1.0 - sinVout * sinVout);
+    outray = -n * cosVout + sinVinVec.normalized() * sinVout;
+//    std::cout << "Fraction " << MathTools::to_string(vi) << " to " << MathTools::to_string(outray) << std::endl;
+    return true;
+}
+
+std::string MathTools::to_string(Eigen::Vector3d v) {
+    return std::string("(") + std::to_string(v.x()) + ", " + std::to_string(v.y()) + ", " + std::to_string(v.z()) + ")";
+}
+
 //
 // Created by kent on 2021/12/11.
 //

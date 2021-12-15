@@ -11,7 +11,7 @@
 #include "MathTools.h"
 #include "Mat_Diffuse_Lambert.h"
 #include "Mat_Specular_Metal.h"
-
+#include "Mat_Dielectrics.h"
 
 //void SetPixel(CImg<float> *img, int x, int y, Eigen::Vector4d color, int color_max = 255) {
 //    (*img)(x, y, 0, 0) = color.x();
@@ -21,6 +21,12 @@
 //}
 
 int main() {
+    // test triangle
+    Triangle xt;
+    xt.vertex[0] = {-1, 0, 0};
+    xt.vertex[1] = {1, 0, 0};
+    xt.vertex[2] = {0, 1, 0};
+    xt.PointInTriangle({0, 0, 0});
     // init random
     MathTools::prepare_rand(1000);
     const int xmax = 800;
@@ -48,6 +54,11 @@ int main() {
     test->radius = 1.0;
     test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.2));
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
+    test = new Sphere;
+    test->center = {5.0, -2.0, -2.0};
+    test->radius = 1.0;
+    test->material = std::shared_ptr<Material>(new Mat_Dielectrics(1.4));
+    scene.objects.push_back(std::shared_ptr<HitObject>(test));
 
     double quad_size = 3.0;
     auto quad = Quad::quick_by_center({5.0, 0.0, -quad_size}, {quad_size, 0.0, 0.0}, {0.0, quad_size, 0.0});
@@ -71,13 +82,14 @@ int main() {
     scene.lights.push_back(quad);
 
     // multisample offset
-    const double offsets_len = 4;
-    const int max_multi_sample = 64;
+    const int max_multi_sample = 128;
 #if 0
+    const double offsets_len = 1;
     Eigen::Vector2d offsets[1] = {
             {0, 0}
     };
 #else
+    const double offsets_len = 4;
     Eigen::Vector2d offsets[4] = {
             {-0.33, -0.33},
             {-0.33, 0.33},
@@ -86,14 +98,16 @@ int main() {
     };
 #endif
 
-    ThreadPool tp(18);
+    ThreadPool tp(24);
     std::list<std::future<void>> results;
     int count = 0;
     bool exit_flag = true;
-    std::thread counter([&exit_flag, &count, xmax, ymax]{
-        while (exit_flag)
-        {
-            std::cout << "Done Ray " << std::to_string((float)(count) / (float)xmax / (float)ymax * 100.0f) << "%" << std::endl;
+    std::thread counter([&exit_flag, &count, xmax, ymax] {
+        while (exit_flag) {
+            std::cout << "Done Ray "
+                      << std::to_string((float) (count) / (float) xmax / (float) ymax * 100.0f)
+                      << "%"
+                      << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     });
@@ -101,7 +115,8 @@ int main() {
     for (int x = 0; x < xmax; x++) {
         for (int y = 0; y < ymax; y++) {
             std::future<void> f = tp.enqueue(
-                    [x, y, &count, &scene, &simple_light, &willsave, offsets, offsets_len, max_multi_sample]() {
+                    [x, y, &count, &scene, &simple_light, &willsave,
+                            offsets, offsets_len, max_multi_sample]() {
                         Eigen::Vector4d color = Eigen::Vector4d::Zero();
                         for (int samples = 0; samples < max_multi_sample; samples++) {
                             for (auto offset: offsets) {

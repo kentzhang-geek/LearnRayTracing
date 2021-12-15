@@ -3,6 +3,7 @@
 //
 
 #include "Sphere.h"
+#include "Mat_Dielectrics.h"
 
 bool Sphere::rayHit(const Ray &ray, Eigen::Vector3d *pt_hit) {
     double projed = ray.dir.dot(this->center - ray.origin);
@@ -15,7 +16,16 @@ bool Sphere::rayHit(const Ray &ray, Eigen::Vector3d *pt_hit) {
                 Eigen::Vector3d cpoint = ray.point_at_parameter((this->center - ray.origin).dot(ray.dir));
                 double sidelen = (cpoint - this->center).norm();
                 double disalter = sqrt(this->radius * this->radius - sidelen * sidelen);
-                *pt_hit = cpoint - ray.dir * std::max(0.0, disalter);
+                double radius_check = (ray.origin - center).norm();
+                if (this->material->as<Mat_Dielectrics>()) {
+                    int xx = 1212;
+                }
+                radius_check -= 0.01;
+                if (radius_check <= radius) {        // in sphere
+                    *pt_hit = cpoint + ray.dir * std::max(0.0, disalter);
+                } else {                                            // out sphere
+                    *pt_hit = cpoint - ray.dir * std::max(0.0, disalter);
+                }
             }
             return true;
         }

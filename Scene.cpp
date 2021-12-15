@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include "Quad.h"
 #include "MathTools.h"
+#include <iostream>
+#include <string>
+#include "Mat_Dielectrics.h"
 
 bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) {
     typedef std::pair<Eigen::Vector3d, std::shared_ptr<HitObject>> HitPair;
@@ -34,7 +37,7 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
 }
 
 
-static Eigen::Vector4d iterRay(Ray &r, Scene *sc, uint32_t max_deep = 10) {
+static Eigen::Vector4d iterRay(Ray &r, Scene *sc, uint32_t max_deep = 50) {
     if (!max_deep)
         return {0.0, 0.0, 0.0, 0.0};
     HitObject *hp;
@@ -45,9 +48,13 @@ static Eigen::Vector4d iterRay(Ray &r, Scene *sc, uint32_t max_deep = 10) {
         Eigen::Vector4d ret = Eigen::Vector4d::Zero();
         if (hp->material->scatter(r, pt, hp, att, scattered))
         {
+//            std::cout << "from " << MathTools::to_string(r.origin) << " to " << MathTools::to_string(scattered.origin) << " by type is dielect " <<
+//            std::to_string(hp->material->as<Mat_Dielectrics>() ? true : false) << std::endl;
+//            std::cout << "dir from " << MathTools::to_string(r.dir) << " to " << MathTools::to_string(scattered.dir) << " by type is dielect " <<
+//                      std::to_string(hp->material->as<Mat_Dielectrics>() ? true : false) << std::endl;
             ret = color_mult(iterRay(scattered, sc, max_deep - 1), att);
         }
-        ret *= 0.5;
+//        ret *= 0.8;
         ret.w() = 1.0;
         return ret;
     } else {

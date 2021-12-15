@@ -34,6 +34,10 @@ bool Triangle::PointInTriangle(Eigen::Vector3d pt) const {
     auto ptb = (vertex[1] - pt);
     auto ptc = (vertex[2] - pt);
 
+    if ((pta + ptb).norm() < ((vertex[0] - vertex[1]).norm() + 0.0001)) return true;
+    if ((pta + ptc).norm() < ((vertex[0] - vertex[2]).norm() + 0.0001)) return true;
+    if ((ptc + ptb).norm() < ((vertex[2] - vertex[1]).norm() + 0.0001)) return true;
+
     auto ab = pta.cross(ptb);
     auto bc = ptb.cross(ptc);
     auto ca = ptc.cross(pta);
