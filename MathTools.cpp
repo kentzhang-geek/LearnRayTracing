@@ -62,6 +62,15 @@ bool MathTools::CheckInRange(double v, double min_v, double max_v) {
     return (v >= min_v) && (v <= max_v);
 }
 
+std::string MathTools::to_string(std::list<Eigen::Vector3d> lpath) {
+    std::string lp = "LP {";
+    for (auto p : lpath) {
+        lp += to_string(p);
+        lp += ", ";
+    }
+    return lp + "}";
+}
+
 //
 // Created by kent on 2021/12/11.
 //

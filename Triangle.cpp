@@ -5,6 +5,7 @@
 #include "Triangle.h"
 #include "MathTools.h"
 #define EPSILON 0.00001
+#include <iostream>
 
 bool Triangle::rayHit(const Ray &r, Eigen::Vector3d *pt_hit) {
     Eigen::Vector3d E1 = vertex[1] - vertex[0];
@@ -23,7 +24,11 @@ bool Triangle::rayHit(const Ray &r, Eigen::Vector3d *pt_hit) {
             S1.dot(S) / s1_e1,
             S2.dot(r.dir.normalized()) / s1_e1,
     };
-    if (tbb.x() >= -EPSILON && tbb.y() >= -EPSILON && tbb.z() >= -EPSILON && (1 - tbb.y() - tbb.z()) >= -EPSILON) {
+    if (tbb.x() >= EPSILON && tbb.y() >= -EPSILON && tbb.z() >= -EPSILON && (1 - tbb.y() - tbb.z()) >= -EPSILON) {
+//        std::cout << MathTools::to_string(vertex[0]) << std::endl;
+//        std::cout << MathTools::to_string(vertex[1]) << std::endl;
+//        std::cout << MathTools::to_string(vertex[2]) << std::endl;
+//        std::cout << MathTools::to_string(tbb) << std::endl;
         if (pt_hit) {
             *pt_hit = r.point_at_parameter(tbb.x());
         }

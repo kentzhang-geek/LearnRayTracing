@@ -21,6 +21,7 @@ namespace MathTools {
     std::string to_string(Eigen::Vector3d v);
     Eigen::Vector3d random_unit_sphere();
     bool CheckInRange(double v, double min_v, double max_v);
+    std::string to_string(std::list<Eigen::Vector3d> lpath);
 }
 
 #endif //MYRAYTRACER_MATHTOOLS_H
