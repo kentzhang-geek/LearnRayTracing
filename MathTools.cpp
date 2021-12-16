@@ -58,6 +58,10 @@ std::string MathTools::to_string(Eigen::Vector3d v) {
     return std::string("(") + std::to_string(v.x()) + ", " + std::to_string(v.y()) + ", " + std::to_string(v.z()) + ")";
 }
 
+bool MathTools::CheckInRange(double v, double min_v, double max_v) {
+    return (v >= min_v) && (v <= max_v);
+}
+
 //
 // Created by kent on 2021/12/11.
 //

@@ -25,8 +25,12 @@ int main() {
     Triangle xt;
     xt.vertex[0] = {-1, 0, 0};
     xt.vertex[1] = {1, 0, 0};
-    xt.vertex[2] = {0, 1, 0};
-    xt.PointInTriangle({0, 0, 0});
+    xt.vertex[2] = {0, 0, -1};
+    Ray rt;
+    rt.origin = {0.0, 5.0, -1.0};
+    rt.dir = {0.0, -1.0, 0.0};
+    Eigen::Vector3d ttt;
+    bool testrt = xt.rayHit(rt, &ttt);
     // init random
     MathTools::prepare_rand(1000);
     const int xmax = 800;

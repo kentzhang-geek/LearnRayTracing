@@ -20,6 +20,7 @@ namespace MathTools {
     bool refract(Eigen::Vector3d vi, Eigen::Vector3d n, double ni_over_nt, Eigen::Vector3d &outray);
     std::string to_string(Eigen::Vector3d v);
     Eigen::Vector3d random_unit_sphere();
+    bool CheckInRange(double v, double min_v, double max_v);
 }
 
 #endif //MYRAYTRACER_MATHTOOLS_H

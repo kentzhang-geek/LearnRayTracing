@@ -3,17 +3,30 @@
 //
 
 #include "Triangle.h"
+#include "MathTools.h"
+#define EPSILON 0.00001
 
 bool Triangle::rayHit(const Ray &r, Eigen::Vector3d *pt_hit) {
-    Eigen::Vector3d nor = normal();
-    if (r.dir.dot(-nor) < 0.0) {
-        return false;
+    Eigen::Vector3d E1 = vertex[1] - vertex[0];
+    Eigen::Vector3d E2 = vertex[2] - vertex[0];
+    Eigen::Vector3d S = r.origin - vertex[0];
+    Eigen::Vector3d S1 = r.dir.normalized().cross(E2);
+    Eigen::Vector3d S2 = S.cross(E1);
+    double s1_e1 = S1.dot(E1);
+    if (s1_e1 > -EPSILON) {
+        s1_e1 = std::max(abs(s1_e1), EPSILON);
+    } else {
+        s1_e1 = -std::max(abs(s1_e1), EPSILON);
     }
-    double o_dis_tr = (vertex[0] - r.origin).dot(-nor);
-    double dir_proj = r.dir.dot(-nor);
-    Eigen::Vector3d pt = r.point_at_parameter(o_dis_tr / dir_proj);
-    if (PointInTriangle(pt)) {
-        *pt_hit = pt;
+    Eigen::Vector3d tbb = {
+            S2.dot(E2) / s1_e1,
+            S1.dot(S) / s1_e1,
+            S2.dot(r.dir.normalized()) / s1_e1,
+    };
+    if (tbb.x() >= -EPSILON && tbb.y() >= -EPSILON && tbb.z() >= -EPSILON && (1 - tbb.y() - tbb.z()) >= -EPSILON) {
+        if (pt_hit) {
+            *pt_hit = r.point_at_parameter(tbb.x());
+        }
         return true;
     }
     return false;
