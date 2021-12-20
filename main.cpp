@@ -23,8 +23,8 @@
 int main() {
     // init random
     MathTools::prepare_rand(4096);
-//    const int xmax = 400;
-//    const int ymax = 200;
+//    const int xmax = 800;
+//    const int ymax = 400;
     const int xmax = 2048;
     const int ymax = 1024;
     gli::texture2d::extent_type dms;
@@ -74,7 +74,7 @@ int main() {
     // light
     double light_size = 0.5;
     quad = Quad::quick_by_center({5.0, quad_size - 2.0, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
-    double light_int = 20.0;
+    double light_int = 10.0;
     quad->emessive_intensity = {light_int, light_int, light_int, 1.0};
     quad->isLight = true;
     scene.lights.push_back(quad);
@@ -89,7 +89,7 @@ int main() {
 
 
     // multisample offset
-    const int max_multi_sample = 256;
+    const int max_multi_sample = 128;
 #if 0
     const double offsets_len = 1;
     Eigen::Vector2d offsets[1] = {

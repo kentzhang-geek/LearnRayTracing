@@ -106,7 +106,7 @@ Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
             double light_cosTheta = r.dir.dot(only_quad_now->normalAtPoint(r.origin));
             double rcp_pdf = 1.0 / only_quad_now->area();
             return color_mult(attention, only_quad_now->emessive_intensity)
-                   * receive_cosTheta * distance_falloff
+                   * std::max(0.0, receive_cosTheta) * distance_falloff
                    * std::max(0.0, light_cosTheta) * rcp_pdf;
         }
     }
