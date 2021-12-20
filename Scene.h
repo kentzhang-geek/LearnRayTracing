@@ -45,6 +45,7 @@ public:
     std::list<std::shared_ptr<HitObject>> objects;
     double pixels_width;
     double pixels_height;
+    double russian_stop_gate = 0.99;
 };
 
 

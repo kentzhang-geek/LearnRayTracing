@@ -40,3 +40,7 @@ std::shared_ptr<Quad> Quad::quick_by_center(Eigen::Vector3d center, Eigen::Vecto
 
 Quad::Quad() {
 }
+
+double Quad::area() {
+    return 4.0 * x.norm() * y.norm();
+}

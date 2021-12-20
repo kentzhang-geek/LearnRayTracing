@@ -11,6 +11,11 @@
 #include "Mat_Dielectrics.h"
 #include "Mat_Diffuse_Lambert.h"
 
+static void CHECK_WHY(bool cond) {
+//    if (cond)
+//        std::cout << "why?";
+}
+
 bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) {
     typedef std::pair<Eigen::Vector3d, std::shared_ptr<HitObject>> HitPair;
     std::vector<HitPair> hit_list;
@@ -38,56 +43,75 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
 }
 
 
-static Eigen::Vector4d iterRay(Ray &r, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 50) {
+static Eigen::Vector4d
+iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 50) {
     if (!max_deep) {
-//        std::cout << MathTools::to_string(light_path) << std::endl;
         return {0.0, 0.0, 0.0, 0.0};
     }
-    HitObject *hp;
+    HitObject *here;
     Eigen::Vector3d pt;
-    if (sc->rayHit(r, hp, pt)) {
-        light_path.push_back(pt);
-        Ray scattered;
-        Eigen::Vector4d att;
+    if (sc->rayHit(path_out_to_here, here, pt)) {
         Eigen::Vector4d ret = Eigen::Vector4d::Zero();
-        scattered.origin = pt;
-        if (hp->material->scatter(r, pt, hp, att, scattered))
-        {
-//            std::cout << "from " << MathTools::to_string(r.origin) << " to " << MathTools::to_string(scattered.origin) << " by type is dielect " <<
-//            std::to_string(hp->material->as<Mat_Dielectrics>() ? true : false) << std::endl;
-//            std::cout << "dir from " << MathTools::to_string(r.dir) << " to " << MathTools::to_string(scattered.dir) << " by type is dielect " <<
-//                      std::to_string(hp->material->as<Mat_Dielectrics>() ? true : false) << std::endl;
-            ret = color_mult(iterRay(scattered, sc, light_path, max_deep - 1), att);
+        // compute direct illumination
+        Ray rayout;
+        rayout.origin = pt;
+        rayout.dir = -path_out_to_here.dir;
+        ret = sc->computeLight(here, rayout, pt);
+        // russian
+        if (MathTools::rand_01() > sc->russian_stop_gate)
+            return ret;
+        light_path.push_back(pt);
+        double check_pb = MathTools::rand_01();
+        Eigen::Vector3d dir_out = MathTools::random_unit_sphere().normalized();
+        dir_out += here->normalAtPoint(pt).normalized();     // cos weighted
+        // iteration
+        Ray path_here_to_next;
+        path_here_to_next.origin = pt;
+        path_here_to_next.dir = dir_out;
+        Eigen::Vector4d down_level = iterRay(path_here_to_next, sc, light_path, max_deep - 1);
+        Ray rin;
+        rin.origin = path_here_to_next.origin + path_here_to_next.dir;
+        rin.dir = -path_here_to_next.dir;
+        Eigen::Vector4d attetion;
+        if (here->material->brdf(rayout, rin, path_here_to_next.origin, here, attetion)) {
+            Eigen::Vector4d down_l_o = color_mult(attetion, down_level);
+            ret += down_l_o / sc->russian_stop_gate;
+            CHECK_WHY(ret.norm() > 100.0);
         }
-//        ret *= 0.8;
-        ret.w() = 1.0;
         return ret;
-    } else {
-        double t = r.dir.y() * 0.5 + 0.5;
-        double t1 = 1.0 - t;
-        return {
-                1.0,
-                1.0,
-                1.0,
-                1.0
-        };
-        return {
-                t1 + 0.5 * t,
-                t1 + 0.7 * t,
-                t1 + 1.0 * t,
-                1.0
-        };
     }
+    return Eigen::Vector4d::Zero();
 }
 
-Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_in, Eigen::Vector3d pos) {
-    // ?->Eye
-    Ray out;
-    Eigen::Vector4d attenion;
-    hp->material->scatter(ray_in, pos, hp, attenion, out);
-    std::list<Eigen::Vector3d > lp;
+Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Vector3d pos) {
+    // choice one light source
+    int light_idx = lights.size() * std::floor(MathTools::rand_01());
+    Quad *only_quad_now = dynamic_cast<Quad *>(lights[light_idx].get());
+    Eigen::Vector3d dA_light = only_quad_now->randomPick_dA();
+    // visible test
+    Ray r;      // ray in test
+    r.origin = pos;
+    r.dir = (dA_light - pos).normalized();
+    HitObject *check = nullptr;
+    Eigen::Vector3d pttest;
+    if (rayHit(r, check, pttest) && (check == only_quad_now)) {
+        // pass visible test
+        Eigen::Vector4d attention;
+        r.origin = dA_light;    // now is from light to this
+        r.dir = (pos - dA_light).normalized();
+        if (hp->material->brdf(ray_out, r, pos, hp, attention)) {
+            // compute brdf result
+            double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
+            double distance_falloff = 1.0 / std::max(1.0, pow((dA_light - ray_out.origin).norm(), 2.0));
+            double light_cosTheta = r.dir.dot(only_quad_now->normalAtPoint(r.origin));
+            double rcp_pdf = 1.0 / only_quad_now->area();
+            return color_mult(attention, only_quad_now->emessive_intensity)
+                   * receive_cosTheta * distance_falloff
+                   * std::max(0.0, light_cosTheta) * rcp_pdf;
+        }
+    }
 
-    return color_mult(iterRay(out, this, lp), attenion);
+    return Eigen::Vector4d::Zero(); // no light in
 }
 
 Ray Scene::rayAtPixel(double x, double y) {
@@ -129,9 +153,9 @@ double Scene::yMaxAtDistance(double dis) {
 Eigen::Vector4d Scene::computeLo(Ray &r) {
     HitObject *hp;
     Eigen::Vector3d pt;
+    std::list<Eigen::Vector3d> light_path;
     if (rayHit(r, hp, pt)) {
-        Eigen::Vector3d n = hp->normalAtPoint(pt);
-        return hp->emessive_intensity + computeLight(hp, r, pt);
+        return hp->emessive_intensity + iterRay(r, this, light_path);
     }
     return Eigen::Vector4d::Zero();
 }

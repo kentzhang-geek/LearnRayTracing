@@ -18,6 +18,8 @@ public:
     Eigen::Vector3d randomPick_dA();
     static std::shared_ptr<Quad> quick_by_center(Eigen::Vector3d center, Eigen::Vector3d x, Eigen::Vector3d y);
 
+    double area();
+
     Triangle two_triangle[2];
     Eigen::Vector3d center;
     Eigen::Vector3d x;

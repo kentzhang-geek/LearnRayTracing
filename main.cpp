@@ -22,9 +22,11 @@
 
 int main() {
     // init random
-    MathTools::prepare_rand(1000);
-    const int xmax = 800;
-    const int ymax = 400;
+    MathTools::prepare_rand(4096);
+//    const int xmax = 400;
+//    const int ymax = 200;
+    const int xmax = 2048;
+    const int ymax = 1024;
     gli::texture2d::extent_type dms;
     gli::texture2d willsave(gli::format::FORMAT_RGBA32_SFLOAT_PACK32,
                             gli::extent2d(xmax, ymax),
@@ -34,6 +36,7 @@ int main() {
     Eigen::Vector4d simple_light = {1.0, 1.00, 1.0, 1.0};
     // construct scene one sphere
     Scene scene;
+//    scene.russian_stop_gate = 0.8;
     scene.pixels_width = xmax;
     scene.pixels_height = ymax;
     scene.cam_pos = {-4.0, 0.0, 0.0};
@@ -46,12 +49,12 @@ int main() {
     test = new Sphere;
     test->center = {5.0, -2.0, 2.0};
     test->radius = 1.0;
-    test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.2));
+//    test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.2));
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
     test = new Sphere;
     test->center = {5.0, -2.0, -2.0};
     test->radius = 1.0;
-    test->material = std::shared_ptr<Material>(new Mat_Dielectrics(1.4));
+//    test->material = std::shared_ptr<Material>(new Mat_Dielectrics(1.4));
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
 
     double quad_size = 3.0;
@@ -70,8 +73,9 @@ int main() {
 
     // light
     double light_size = 0.5;
-    quad = Quad::quick_by_center({5.0, quad_size - 0.3, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
-    quad->emessive_intensity = {10.0, 10.0, 10.0, 1.0};
+    quad = Quad::quick_by_center({5.0, quad_size - 2.0, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
+    double light_int = 20.0;
+    quad->emessive_intensity = {light_int, light_int, light_int, 1.0};
     quad->isLight = true;
     scene.lights.push_back(quad);
 
@@ -85,7 +89,7 @@ int main() {
 
 
     // multisample offset
-    const int max_multi_sample = 128;
+    const int max_multi_sample = 256;
 #if 0
     const double offsets_len = 1;
     Eigen::Vector2d offsets[1] = {
