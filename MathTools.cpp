@@ -73,7 +73,7 @@ std::string MathTools::to_string(std::list<Eigen::Vector3d> lpath) {
 
 #define TONE_SIMPLE_ONE(v)  v / (1.0 + v)
 Eigen::Vector4d MathTools::Simple_ToneMapping(Eigen::Vector4d v) {
-    return v;
+//    return v;
     return {
             TONE_SIMPLE_ONE(v.x()),
             TONE_SIMPLE_ONE(v.y()),
