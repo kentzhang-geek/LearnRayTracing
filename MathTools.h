@@ -20,8 +20,10 @@ namespace MathTools {
     bool refract(Eigen::Vector3d vi, Eigen::Vector3d n, double ni_over_nt, Eigen::Vector3d &outray);
     std::string to_string(Eigen::Vector3d v);
     Eigen::Vector3d random_unit_sphere();
+    Eigen::Vector3d random_unit_hemisphere(Eigen::Vector3d normal);
     bool CheckInRange(double v, double min_v, double max_v);
     std::string to_string(std::list<Eigen::Vector3d> lpath);
+    Eigen::Vector4d Simple_ToneMapping(Eigen::Vector4d v);
 }
 
 #endif //MYRAYTRACER_MATHTOOLS_H

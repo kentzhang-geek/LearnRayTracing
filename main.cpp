@@ -23,10 +23,10 @@
 int main() {
     // init random
     MathTools::prepare_rand(4096);
-//    const int xmax = 800;
-//    const int ymax = 400;
-    const int xmax = 2048;
-    const int ymax = 1024;
+    const int xmax = 800;
+    const int ymax = 400;
+//    const int xmax = 2048;
+//    const int ymax = 1024;
     gli::texture2d::extent_type dms;
     gli::texture2d willsave(gli::format::FORMAT_RGBA32_SFLOAT_PACK32,
                             gli::extent2d(xmax, ymax),
@@ -49,7 +49,7 @@ int main() {
     test = new Sphere;
     test->center = {5.0, -2.0, 2.0};
     test->radius = 1.0;
-//    test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.2));
+    test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.0));
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
     test = new Sphere;
     test->center = {5.0, -2.0, -2.0};
@@ -128,11 +128,12 @@ int main() {
                         for (int samples = 0; samples < max_multi_sample; samples++) {
                             for (auto offset: offsets) {
                                 Ray r = scene.rayAtPixel(x + offset.x(), y + offset.y());
-                                color += scene.computeLo(r);
+                                color += MathTools::Simple_ToneMapping(scene.computeLo(r));
                             }
                         }
                         count++;
                         color = color / offsets_len / (double) max_multi_sample;
+//                        color = MathTools::Simple_ToneMapping(color);
                         willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), color.w()));
                         return;
                     });

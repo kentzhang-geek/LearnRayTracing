@@ -16,7 +16,20 @@ Mat_Specular_Metal::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObj
     if (cosTheta < 0.01) {
         return false;
     }
-    attenuation = albedo * cosTheta * ref.dot(out.dir);
+    Eigen::Vector3d half_plane = ((out.dir + -in.dir) / 2.0).normalized();
+    attenuation = albedo * pow(std::max(0.0, half_plane.dot(hp->normalAtPoint(hit_pos))), 10.0);
+    return true;
+}
+
+bool Mat_Specular_Metal::brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
+                              Eigen::Vector4d &attenuation) {
+    double cosTheta = ray_out.dir.dot(hp->normalAtPoint(hit_pos));
+    if (cosTheta < 0.01) {
+        return false;
+    }
+    Eigen::Vector3d ref = MathTools::reflect(ray_in.dir, hp->normalAtPoint(hit_pos)).normalized();
+    Eigen::Vector3d half_plane = ((ray_out.dir + -ray_in.dir) / 2.0).normalized();
+    attenuation = albedo * pow(std::max(0.0, half_plane.dot(hp->normalAtPoint(hit_pos))), 10.0);
     return true;
 }
 

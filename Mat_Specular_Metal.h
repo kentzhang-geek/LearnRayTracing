@@ -13,6 +13,10 @@ public:
 
     bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
                  Ray &out) override;
+
+    bool brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
+              Eigen::Vector4d &attenuation) override;
+
     Eigen::Vector4d albedo;
     double fussy = 0.0;
 };

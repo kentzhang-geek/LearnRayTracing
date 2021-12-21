@@ -71,6 +71,26 @@ std::string MathTools::to_string(std::list<Eigen::Vector3d> lpath) {
     return lp + "}";
 }
 
+#define TONE_SIMPLE_ONE(v)  v / (1.0 + v)
+Eigen::Vector4d MathTools::Simple_ToneMapping(Eigen::Vector4d v) {
+    return v;
+    return {
+            TONE_SIMPLE_ONE(v.x()),
+            TONE_SIMPLE_ONE(v.y()),
+            TONE_SIMPLE_ONE(v.z()),
+            1.0
+    };
+}
+
+Eigen::Vector3d MathTools::random_unit_hemisphere(Eigen::Vector3d normal) {
+    normal = normal.normalized();
+    Eigen::Vector3d ret;
+    do {
+        ret = random_unit_sphere().normalized();
+    } while (ret.dot(normal) < 0.001);
+    return ret;
+}
+
 //
 // Created by kent on 2021/12/11.
 //

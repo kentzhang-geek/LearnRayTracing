@@ -61,22 +61,13 @@ iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path
         if (MathTools::rand_01() > sc->russian_stop_gate)
             return ret;
         light_path.push_back(pt);
-        double check_pb = MathTools::rand_01();
-        Eigen::Vector3d dir_out = MathTools::random_unit_sphere().normalized();
-        dir_out += here->normalAtPoint(pt).normalized();     // cos weighted
         // iteration
-        Ray path_here_to_next;
-        path_here_to_next.origin = pt;
-        path_here_to_next.dir = dir_out;
-        Eigen::Vector4d down_level = iterRay(path_here_to_next, sc, light_path, max_deep - 1);
-        Ray rin;
-        rin.origin = path_here_to_next.origin + path_here_to_next.dir;
-        rin.dir = -path_here_to_next.dir;
-        Eigen::Vector4d attetion;
-        if (here->material->brdf(rayout, rin, path_here_to_next.origin, here, attetion)) {
-            Eigen::Vector4d down_l_o = color_mult(attetion, down_level);
+        Ray path_here_to_other;
+        Eigen::Vector4d attetion_another;
+        if (here->material->scatter(path_out_to_here, pt, here, attetion_another, path_here_to_other)) {
+            Eigen::Vector4d down_level = iterRay(path_here_to_other, sc, light_path, max_deep - 1);
+            Eigen::Vector4d down_l_o = color_mult(attetion_another, down_level);
             ret += down_l_o / sc->russian_stop_gate;
-            CHECK_WHY(ret.norm() > 100.0);
         }
         return ret;
     }
@@ -101,13 +92,15 @@ Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
         r.dir = (pos - dA_light).normalized();
         if (hp->material->brdf(ray_out, r, pos, hp, attention)) {
             // compute brdf result
-            double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
+//            double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
             double distance_falloff = 1.0 / std::max(1.0, pow((dA_light - ray_out.origin).norm(), 2.0));
             double light_cosTheta = r.dir.dot(only_quad_now->normalAtPoint(r.origin));
             double rcp_pdf = 1.0 / only_quad_now->area();
             return color_mult(attention, only_quad_now->emessive_intensity)
-                   * std::max(0.0, receive_cosTheta) * distance_falloff
-                   * std::max(0.0, light_cosTheta) * rcp_pdf;
+                   //                   * std::max(0.0, receive_cosTheta)
+                   * distance_falloff
+                   * std::max(0.0, light_cosTheta)
+                   * rcp_pdf;
         }
     }
 
