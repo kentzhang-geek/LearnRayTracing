@@ -12,6 +12,7 @@
 #include "Mat_Diffuse_Lambert.h"
 #include "Mat_Specular_Metal.h"
 #include "Mat_Dielectrics.h"
+#include "Mat_PBR_CookTorrance.h"
 
 //void SetPixel(CImg<float> *img, int x, int y, Eigen::Vector4d color, int color_max = 255) {
 //    (*img)(x, y, 0, 0) = color.x();
@@ -20,7 +21,7 @@
 //    (*img)(x, y, 0, 3) = color.w();
 //}
 
-int main() {
+int main(int argc, char **argv) {
     // init random
     MathTools::prepare_rand(4096);
     const int xmax = 800;
@@ -49,22 +50,24 @@ int main() {
     test = new Sphere;
     test->center = {5.0, -2.0, 2.0};
     test->radius = 1.0;
-    test->material = std::shared_ptr<Material>(new Mat_Specular_Metal({1.0, 1.0, 1.0, 1.0}, 0.0));
+    test->material->as<DefaultMaterial>()->roughness = 0.7;
+    test->material->as<DefaultMaterial>()->metalness = 0.4;
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
     test = new Sphere;
     test->center = {5.0, -2.0, -2.0};
     test->radius = 1.0;
-//    test->material = std::shared_ptr<Material>(new Mat_Dielectrics(1.4));
+    test->material->as<DefaultMaterial>()->roughness = 0.1;
+    test->material->as<DefaultMaterial>()->metalness = 1.0;
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
 
     double quad_size = 3.0;
     auto quad = Quad::quick_by_center({5.0, 0.0, -quad_size}, {quad_size, 0.0, 0.0}, {0.0, quad_size, 0.0});
-    quad->material->as<Mat_Diffuse_Lambert>()->albedo = {1.0, 0.0, 0.0, 1.0};
+    quad->material->as<DefaultMaterial>()->albedo = {1.0, 0.0, 0.0};
     scene.objects.push_back(quad);
     quad = Quad::quick_by_center({7.0, 0.0, 0.0}, {0.0, 0.0, quad_size}, {0.0, quad_size, 0.0});
     scene.objects.push_back(quad);
     quad = Quad::quick_by_center({5.0, 0.0, quad_size}, {-quad_size, 0.0, 0.0}, {0.0, quad_size, 0.0});
-    quad->material->as<Mat_Diffuse_Lambert>()->albedo = {0.0, 1.0, 0.0, 1.0};
+    quad->material->as<DefaultMaterial>()->albedo = {0.0, 1.0, 0.0};
     scene.objects.push_back(quad);
     quad = Quad::quick_by_center({5.0, -quad_size, 0.0}, {quad_size, 0.0, 0.0}, {0.0, 0.0, -quad_size});
     scene.objects.push_back(quad);
@@ -74,7 +77,7 @@ int main() {
     // light
     double light_size = 0.5;
     quad = Quad::quick_by_center({5.0, quad_size - 2.0, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
-    double light_int = 10.0;
+    double light_int = 20.0;
     quad->emessive_intensity = {light_int, light_int, light_int, 1.0};
     quad->isLight = true;
     scene.lights.push_back(quad);
@@ -89,7 +92,7 @@ int main() {
 
 
     // multisample offset
-    const int max_multi_sample = 128;
+    const int max_multi_sample = std::stoi(argv[1]);
 #if 0
     const double offsets_len = 1;
     Eigen::Vector2d offsets[1] = {
@@ -128,12 +131,12 @@ int main() {
                         for (int samples = 0; samples < max_multi_sample; samples++) {
                             for (auto offset: offsets) {
                                 Ray r = scene.rayAtPixel(x + offset.x(), y + offset.y());
-                                color += MathTools::Simple_ToneMapping(scene.computeLo(r));
+                                color += scene.computeLo(r);
                             }
                         }
                         count++;
                         color = color / offsets_len / (double) max_multi_sample;
-//                        color = MathTools::Simple_ToneMapping(color);
+                        color = MathTools::Simple_ToneMapping(color);
                         willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), color.w()));
                         return;
                     });

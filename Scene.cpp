@@ -67,7 +67,9 @@ iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path
         if (here->material->scatter(path_out_to_here, pt, here, attetion_another, path_here_to_other)) {
             Eigen::Vector4d down_level = iterRay(path_here_to_other, sc, light_path, max_deep - 1);
             Eigen::Vector4d down_l_o = color_mult(attetion_another, down_level);
-            ret += down_l_o / sc->russian_stop_gate;
+            double rcp_pdf = 2.0 * M_PI;
+            double cosTheta = here->normalAtPoint(pt).dot(path_here_to_other.dir);
+            ret += down_l_o / sc->russian_stop_gate * cosTheta * rcp_pdf;
         }
         return ret;
     }
@@ -92,12 +94,12 @@ Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
         r.dir = (pos - dA_light).normalized();
         if (hp->material->brdf(ray_out, r, pos, hp, attention)) {
             // compute brdf result
-//            double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
+            double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
             double distance_falloff = 1.0 / std::max(1.0, pow((dA_light - ray_out.origin).norm(), 2.0));
             double light_cosTheta = r.dir.dot(only_quad_now->normalAtPoint(r.origin));
             double rcp_pdf = 1.0 / only_quad_now->area();
             return color_mult(attention, only_quad_now->emessive_intensity)
-                   //                   * std::max(0.0, receive_cosTheta)
+                   * std::max(0.0, receive_cosTheta)
                    * distance_falloff
                    * std::max(0.0, light_cosTheta)
                    * rcp_pdf;

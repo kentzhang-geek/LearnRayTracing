@@ -11,6 +11,10 @@
 
 class HitObject;
 
+class Mat_PBR_CookTorrance;
+
+typedef Mat_PBR_CookTorrance DefaultMaterial;
+
 class Material {
 public:
     virtual bool

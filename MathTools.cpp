@@ -91,7 +91,15 @@ Eigen::Vector3d MathTools::random_unit_hemisphere(Eigen::Vector3d normal) {
     return ret;
 }
 
-//
-// Created by kent on 2021/12/11.
-//
+static inline double mix_one(double v1, double v2, double rate) {
+    return v2 * rate + v1 * (1.0 - rate);
+}
+
+Eigen::Vector3d MathTools::mix(Eigen::Vector3d f0, Eigen::Vector3d color, double metalness) {
+    return {
+        mix_one(f0.x(), color.x(), metalness),
+        mix_one(f0.y(), color.y(), metalness),
+        mix_one(f0.z(), color.z(), metalness)
+    };
+}
 
