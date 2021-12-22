@@ -23,7 +23,7 @@
 
 int main(int argc, char **argv) {
     // init random
-    MathTools::prepare_rand(4096);
+    MathTools::prepare_rand(1024 * 1024);
     const int xmax = 800;
     const int ymax = 400;
 //    const int xmax = 2048;
