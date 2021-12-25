@@ -43,42 +43,42 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
 }
 
 
-static Eigen::Vector4d
-iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 50) {
+static Eigen::Vector3d
+iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 10) {
     if (!max_deep) {
-        return {0.0, 0.0, 0.0, 0.0};
+        return {0.0, 0.0, 0.0};
     }
     HitObject *here;
     Eigen::Vector3d pt;
     if (sc->rayHit(path_out_to_here, here, pt)) {
-        Eigen::Vector4d ret = Eigen::Vector4d::Zero();
+        Eigen::Vector3d ret = Eigen::Vector3d::Zero();
         // compute direct illumination
         Ray rayout;
         rayout.origin = pt;
         rayout.dir = -path_out_to_here.dir;
         ret = sc->computeLight(here, rayout, pt);
         // russian
-        if (MathTools::rand_01() > sc->russian_stop_gate)
-            return ret;
+//        if (MathTools::rand_01() > sc->russian_stop_gate)
+//            return ret; //{0.0, 0.0, 0.0};
         light_path.push_back(pt);
         // iteration
         Ray path_here_to_other;
-        Eigen::Vector4d attetion_another;
+        Eigen::Vector3d attetion_another;
         if (here->material->scatter(path_out_to_here, pt, here, attetion_another, path_here_to_other)) {
-            Eigen::Vector4d down_level = iterRay(path_here_to_other, sc, light_path, max_deep - 1);
-            Eigen::Vector4d down_l_o = color_mult(attetion_another, down_level);
+            Eigen::Vector3d down_level = iterRay(path_here_to_other, sc, light_path, max_deep - 1);
+            Eigen::Vector3d down_l_o = color_mult(attetion_another, down_level);
             double rcp_pdf = 2.0 * M_PI;
             double cosTheta = here->normalAtPoint(pt).dot(path_here_to_other.dir);
-            ret += down_l_o / sc->russian_stop_gate * cosTheta * rcp_pdf;
+            ret += down_l_o * std::max(0.0, cosTheta) * rcp_pdf;
         }
         return ret;
     }
-    return Eigen::Vector4d::Zero();
+    return Eigen::Vector3d::Zero();
 }
 
-Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Vector3d pos) {
+Eigen::Vector3d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Vector3d pos) {
     // choice one light source
-    int light_idx = lights.size() * std::floor(MathTools::rand_01());
+    int light_idx = std::floor((double) lights.size() * MathTools::rand_01());
     Quad *only_quad_now = dynamic_cast<Quad *>(lights[light_idx].get());
     Eigen::Vector3d dA_light = only_quad_now->randomPick_dA();
     // visible test
@@ -89,10 +89,13 @@ Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
     Eigen::Vector3d pttest;
     if (rayHit(r, check, pttest) && (check == only_quad_now)) {
         // pass visible test
-        Eigen::Vector4d attention;
+        Eigen::Vector3d attention;
         r.origin = dA_light;    // now is from light to this
         r.dir = (pos - dA_light).normalized();
         if (hp->material->brdf(ray_out, r, pos, hp, attention)) {
+            if (attention.norm() > 10.0) {
+                std::cout << MathTools::to_string(attention) << std::endl;
+            }
             // compute brdf result
             double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
             double distance_falloff = 1.0 / std::max(1.0, pow((dA_light - ray_out.origin).norm(), 2.0));
@@ -106,7 +109,7 @@ Eigen::Vector4d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
         }
     }
 
-    return Eigen::Vector4d::Zero(); // no light in
+    return Eigen::Vector3d::Zero(); // no light in
 }
 
 Ray Scene::rayAtPixel(double x, double y) {
@@ -145,12 +148,12 @@ double Scene::yMaxAtDistance(double dis) {
     return xMaxAtDistance(dis) * ratio;
 }
 
-Eigen::Vector4d Scene::computeLo(Ray &r) {
+Eigen::Vector3d Scene::computeLo(Ray &r) {
     HitObject *hp;
     Eigen::Vector3d pt;
     std::list<Eigen::Vector3d> light_path;
     if (rayHit(r, hp, pt)) {
         return hp->emessive_intensity + iterRay(r, this, light_path);
     }
-    return Eigen::Vector4d::Zero();
+    return Eigen::Vector3d::Zero();
 }

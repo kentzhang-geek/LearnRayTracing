@@ -28,7 +28,7 @@ namespace MathTools {
     Eigen::Vector3d mix(Eigen::Vector3d f0, Eigen::Vector3d color, double metalness);
     bool CheckInRange(double v, double min_v, double max_v);
     std::string to_string(std::list<Eigen::Vector3d> lpath);
-    Eigen::Vector4d Simple_ToneMapping(Eigen::Vector4d v);
+    Eigen::Vector3d Simple_ToneMapping(Eigen::Vector3d v);
 }
 
 #endif //MYRAYTRACER_MATHTOOLS_H

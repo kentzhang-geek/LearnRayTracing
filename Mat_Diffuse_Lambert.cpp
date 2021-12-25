@@ -6,7 +6,7 @@
 #include "MathTools.h"
 
 bool
-Mat_Diffuse_Lambert::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+Mat_Diffuse_Lambert::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                              Ray &out) {
     // random sphere unit
     out.origin = hit_pos;
@@ -16,10 +16,10 @@ Mat_Diffuse_Lambert::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitOb
 }
 
 bool Mat_Diffuse_Lambert::brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
-                               Eigen::Vector4d &attenuation) {
+                               Eigen::Vector3d &attenuation) {
     // uniform distribute on hemisphere
     attenuation = albedo / M_PI;
     return true;
 }
 
-Mat_Diffuse_Lambert::Mat_Diffuse_Lambert(const Eigen::Vector4d &albedo) : albedo(albedo) {}
+Mat_Diffuse_Lambert::Mat_Diffuse_Lambert(const Eigen::Vector3d &albedo) : albedo(albedo) {}

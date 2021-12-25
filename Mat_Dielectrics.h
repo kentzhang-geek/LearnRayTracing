@@ -12,7 +12,7 @@ public:
     double refract_idx = 1.0;
     Mat_Dielectrics(double refractIdx);
 
-    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                  Ray &out) override;
 };
 

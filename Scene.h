@@ -23,11 +23,11 @@ class Scene {
 public:
     Scene() = default;
 
-    Eigen::Vector4d computeLo(Ray &r);
+    Eigen::Vector3d computeLo(Ray &r);
 
     bool rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos);
 
-    Eigen::Vector4d computeLight(HitObject *hp, const Ray &ray_in, Eigen::Vector3d pos);
+    Eigen::Vector3d computeLight(HitObject *hp, const Ray &ray_out, Eigen::Vector3d pos);
 
     Ray rayAtPixel(double x, double y);
 
@@ -45,7 +45,7 @@ public:
     std::list<std::shared_ptr<HitObject>> objects;
     double pixels_width;
     double pixels_height;
-    double russian_stop_gate = 0.99;
+    double russian_stop_gate = 0.7;
 };
 
 

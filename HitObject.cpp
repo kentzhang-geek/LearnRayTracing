@@ -7,5 +7,5 @@
 #include "Mat_PBR_CookTorrance.h"
 
 HitObject::HitObject() {
-    material = std::shared_ptr<Mat_PBR_CookTorrance>(new Mat_PBR_CookTorrance());
+    material = std::shared_ptr<DefaultMaterial>(new DefaultMaterial());
 }

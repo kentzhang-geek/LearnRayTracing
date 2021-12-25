@@ -16,11 +16,11 @@ public:
     double metalness = 0.0;
     double fresnel_0 = 0.04;
 
-    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                  Ray &out) override;
 
     bool brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
-              Eigen::Vector4d &attenuation) override;
+              Eigen::Vector3d &attenuation) override;
 
 };
 

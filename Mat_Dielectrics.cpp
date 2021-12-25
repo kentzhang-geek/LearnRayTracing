@@ -5,9 +5,9 @@
 #include "Mat_Dielectrics.h"
 #include "MathTools.h"
 
-bool Mat_Dielectrics::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+bool Mat_Dielectrics::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                               Ray &out) {
-    attenuation = {1.0, 1.0, 1.0, 1.0};
+    attenuation = {1.0, 1.0, 1.0};
     Eigen::Vector3d outray;
     Eigen::Vector3d n = hp->normalAtPoint(hit_pos);
     bool is_refract = false;

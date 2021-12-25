@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     test = new Sphere;
     test->center = {5.0, -2.0, -2.0};
     test->radius = 1.0;
-    test->material->as<DefaultMaterial>()->roughness = 0.1;
+    test->material->as<DefaultMaterial>()->roughness = 0.2;
     test->material->as<DefaultMaterial>()->metalness = 1.0;
     scene.objects.push_back(std::shared_ptr<HitObject>(test));
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     double light_size = 0.5;
     quad = Quad::quick_by_center({5.0, quad_size - 2.0, 0.0}, {light_size, 0.0, 0.0}, {0.0, 0.0, light_size});
     double light_int = 20.0;
-    quad->emessive_intensity = {light_int, light_int, light_int, 1.0};
+    quad->emessive_intensity = {light_int, light_int, light_int};
     quad->isLight = true;
     scene.lights.push_back(quad);
 
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
             std::future<void> f = tp.enqueue(
                     [x, y, &count, &scene, &simple_light, &willsave,
                             offsets, offsets_len, max_multi_sample]() {
-                        Eigen::Vector4d color = Eigen::Vector4d::Zero();
+                        Eigen::Vector3d color = Eigen::Vector3d::Zero();
                         for (int samples = 0; samples < max_multi_sample; samples++) {
                             for (auto offset: offsets) {
                                 Ray r = scene.rayAtPixel(x + offset.x(), y + offset.y());
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
                         count++;
                         color = color / offsets_len / (double) max_multi_sample;
                         color = MathTools::Simple_ToneMapping(color);
-                        willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), color.w()));
+                        willsave.store(gli::extent2d(x, y), 0, glm::vec4(color.x(), color.y(), color.z(), 1.0));
                         return;
                     });
             results.push_back(std::move(f));

@@ -9,15 +9,15 @@
 
 class Mat_Specular_Metal : public Material{
 public:
-    Mat_Specular_Metal(const Eigen::Vector4d &albedo, double fussy = 0.01);
+    Mat_Specular_Metal(const Eigen::Vector3d &albedo, double fussy = 0.01);
 
-    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+    bool scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                  Ray &out) override;
 
     bool brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
-              Eigen::Vector4d &attenuation) override;
+              Eigen::Vector3d &attenuation) override;
 
-    Eigen::Vector4d albedo;
+    Eigen::Vector3d albedo;
     double fussy = 0.0;
 };
 

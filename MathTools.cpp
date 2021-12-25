@@ -11,6 +11,10 @@ static int rand_len = 0;
 static int rand_idx = 0;
 
 void MathTools::prepare_rand(int random_size) {
+    dist_boost();
+    dist_boost();
+    dist_boost();
+    dist_boost();
     rand_idx = 0;
     rand_len = random_size;
     if (random_nums)
@@ -75,13 +79,12 @@ std::string MathTools::to_string(std::list<Eigen::Vector3d> lpath) {
 }
 
 #define TONE_SIMPLE_ONE(v)  v / (1.0 + v)
-Eigen::Vector4d MathTools::Simple_ToneMapping(Eigen::Vector4d v) {
+Eigen::Vector3d MathTools::Simple_ToneMapping(Eigen::Vector3d v) {
     return v;
     return {
             TONE_SIMPLE_ONE(v.x()),
             TONE_SIMPLE_ONE(v.y()),
             TONE_SIMPLE_ONE(v.z()),
-            1.0
     };
 }
 

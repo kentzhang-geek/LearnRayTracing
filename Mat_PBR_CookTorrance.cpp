@@ -2,12 +2,13 @@
 // Created by kent on 2021/12/22.
 //
 
+#include <iostream>
 #include "Mat_PBR_CookTorrance.h"
 #include "MathTools.h"
 
 
 bool
-Mat_PBR_CookTorrance::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector4d &attenuation,
+Mat_PBR_CookTorrance::scatter(const Ray &in, const Eigen::Vector3d hit_pos, HitObject *hp, Eigen::Vector3d &attenuation,
                               Ray &out) {
     out.origin = hit_pos;
     out.dir = MathTools::random_unit_hemisphere(hp->normalAtPoint(hit_pos));
@@ -57,7 +58,7 @@ double GeometrySmith(Eigen::Vector3d N, Eigen::Vector3d V, Eigen::Vector3d L, do
 }
 
 bool Mat_PBR_CookTorrance::brdf(const Ray &ray_out, const Ray &ray_in, const Eigen::Vector3d hit_pos, HitObject *hp,
-                                Eigen::Vector4d &attenuation) {
+                                Eigen::Vector3d &attenuation) {
     // prepare
     Eigen::Vector3d N = hp->normalAtPoint(hit_pos);
     Eigen::Vector3d half_plane = ((ray_out.dir + -ray_in.dir) / 2.0).normalized();
@@ -74,7 +75,10 @@ bool Mat_PBR_CookTorrance::brdf(const Ray &ray_out, const Ray &ray_in, const Eig
     kD *= 1.0 - metalness;
 
     Eigen::Vector3d result = color_mult(kD, albedo) / M_PI + specular;
-    attenuation = {result.x(), result.y(), result.z(), 1.0};
+    attenuation = {result.x(), result.y(), result.z()};
+    if (result.norm() > 10.0) {
+        std::cout << MathTools::to_string(result) << std::endl;
+    }
     return true;
 }
 
