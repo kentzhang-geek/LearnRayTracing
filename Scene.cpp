@@ -44,7 +44,7 @@ bool Scene::rayHit(const Ray &ray, HitObject *&hitObject, Eigen::Vector3d &pos) 
 
 
 static Eigen::Vector3d
-iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 10) {
+iterRay(Ray &path_out_to_here, Scene *sc, std::list<Eigen::Vector3d> &light_path, uint32_t max_deep = 30) {
     if (!max_deep) {
         return {0.0, 0.0, 0.0};
     }
@@ -93,9 +93,6 @@ Eigen::Vector3d Scene::computeLight(HitObject *hp, const Ray &ray_out, Eigen::Ve
         r.origin = dA_light;    // now is from light to this
         r.dir = (pos - dA_light).normalized();
         if (hp->material->brdf(ray_out, r, pos, hp, attention)) {
-            if (attention.norm() > 10.0) {
-                std::cout << MathTools::to_string(attention) << std::endl;
-            }
             // compute brdf result
             double receive_cosTheta = hp->normalAtPoint(pos).dot(-r.dir);
             double distance_falloff = 1.0 / std::max(1.0, pow((dA_light - ray_out.origin).norm(), 2.0));

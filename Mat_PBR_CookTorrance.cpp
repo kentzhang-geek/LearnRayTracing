@@ -26,8 +26,7 @@ static inline Eigen::Vector3d fresnelSchlick(double cosTheta, Eigen::Vector3d F0
 }
 
 double DistributionGGX(Eigen::Vector3d N, Eigen::Vector3d H, double roughness) {
-    double a = roughness * roughness;
-    double a2 = a * a;
+    double a2 = roughness * roughness;
     double NdotH = std::max(N.dot(H), 0.0);
     double NdotH2 = NdotH * NdotH;
 
@@ -35,6 +34,7 @@ double DistributionGGX(Eigen::Vector3d N, Eigen::Vector3d H, double roughness) {
     double denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = M_PI * denom * denom;
 
+    double res = nom / denom;
     return nom / denom;
 }
 
@@ -61,24 +61,22 @@ bool Mat_PBR_CookTorrance::brdf(const Ray &ray_out, const Ray &ray_in, const Eig
                                 Eigen::Vector3d &attenuation) {
     // prepare
     Eigen::Vector3d N = hp->normalAtPoint(hit_pos);
-    Eigen::Vector3d half_plane = ((ray_out.dir + -ray_in.dir) / 2.0).normalized();
+    Eigen::Vector3d half_plane = ((ray_out.dir + -ray_in.dir)).normalized();
     Eigen::Vector3d F0 = {fresnel_0, fresnel_0, fresnel_0};
     F0 = MathTools::mix(F0, albedo, metalness);
     // compute
     double D_GGX = DistributionGGX(N, half_plane, roughness);
     double G_GGX = GeometrySmith(N, ray_out.dir, -ray_in.dir, roughness);
     Eigen::Vector3d F = fresnelSchlick(std::max(0.0, half_plane.dot(ray_out.dir)), F0);
-    Eigen::Vector3d specular = D_GGX * G_GGX * F /
-                               (4.0 * std::max(0.0, N.dot(-ray_in.dir)) * std::max(0.0, N.dot(ray_out.dir)) + 0.001);
+    Eigen::Vector3d nominator = D_GGX * G_GGX * F;
+    double denominator = 4.0 * std::max(0.0, N.dot(-ray_in.dir)) * std::max(0.0, N.dot(ray_out.dir)) + 0.001;
+    Eigen::Vector3d specular = nominator / denominator;
     Eigen::Vector3d kS = F;
     Eigen::Vector3d kD = Eigen::Vector3d::Ones() - kS;
     kD *= 1.0 - metalness;
 
     Eigen::Vector3d result = color_mult(kD, albedo) / M_PI + specular;
     attenuation = {result.x(), result.y(), result.z()};
-    if (result.norm() > 10.0) {
-        std::cout << MathTools::to_string(result) << std::endl;
-    }
     return true;
 }
 
